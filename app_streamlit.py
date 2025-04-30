@@ -2,12 +2,7 @@ import streamlit as st
 import requests
 from PIL import Image
 import io
-import subprocess
-import sys
 
-# Mise à jour de pip et Pillow
-subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pillow"])
 
 # ---------------- CONFIG ----------------
 API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"  # Ajout du https obligatoire
