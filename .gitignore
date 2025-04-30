@@ -1,25 +1,10 @@
-# Ignore les fichiers de sauvegarde d'éditeurs
-*~            # Fichiers de sauvegarde généraux
-*.bak         # Fichiers de sauvegarde avec extension .bak
-*.swp         # Fichiers temporaires créés par vim
-*.swo         # Fichiers temporaires créés par vim
-*.swp         # Fichiers temporaires créés par vim
-*.swn         # Fichiers temporaires créés par vim
-*.bak.*       # Fichiers de sauvegarde avec extension .bak suivie d'un autre suffixe
-*.tmp         # Fichiers temporaires
-
-# Ignore le dossier virtuel (environnement Python)
-.venv/
-env/
-venv/
-
-# Ignore les fichiers de configuration de l'IDE
-.idea/
-.vscode/
-
-# Ignore les fichiers de log
-*.log
-
-# Ignore les fichiers spécifiques au système d'exploitation
-.DS_Store      # MacOS
-Thumbs.db      # Windows
+myenv38/ 
+__pycache__/ 
+*.pyc 
+*.pyo 
+*.bak 
+*.swp 
+.ipynb_checkpoints/ 
+.vscode/ 
+*.png
+model/
