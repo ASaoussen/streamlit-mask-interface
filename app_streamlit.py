@@ -4,6 +4,9 @@ from PIL import Image
 import io
 import subprocess
 
+
+
+
 # Mise à jour de pip
 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
 
