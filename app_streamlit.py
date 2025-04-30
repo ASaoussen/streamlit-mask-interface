@@ -3,19 +3,15 @@ import requests
 from PIL import Image
 import io
 import subprocess
-
-
-
+import sys  # Ajouter l'import de sys
 
 # Mise à jour de pip
 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
 
 # ---------------- CONFIG ----------------
-
-API_URL = "segmentationimages.azurewebsites.net/predict_mask"  # Change selon l'URL de ton API
+API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"  # URL complète de l'API (assurez-vous d'ajouter le protocole https://)
 
 # ---------------- INTERFACE ----------------
-
 st.title("Segmentation d'image")
 st.markdown("Charge une image, envoie-la à l'API Flask et récupère le masque prédit.")
 
@@ -32,19 +28,16 @@ if uploaded_file is not None:
 
         # Appel API
         with st.spinner("Prédiction en cours..."):
-            files = {
-    "image": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)
-}
             response = requests.post(API_URL, files=files)
 
         # Vérification du statut de la réponse
-        print(response.status_code,response.content) 
+        print(response.status_code, response.content)  # Affichage du status et du contenu de la réponse pour débogage
         if response.status_code == 200:
             try:
                 # Convertir la réponse en image (masque)
                 mask_image = Image.open(io.BytesIO(response.content))
                 st.success("Masque généré avec succès !")
-                st.image(mask_image, caption="Masque segmenté", use_container_width=True)  # Remplacer use_column_width par use_container_width
+                st.image(mask_image, caption="Masque segmenté", use_container_width=True)
             except Exception as e:
                 st.error(f"Erreur lors du traitement du masque : {e}")
         else:
