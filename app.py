@@ -36,6 +36,9 @@ if uploaded_file is not None:
         # Définir le chemin vers le masque réel
         mask_real_path = os.path.join(BASE_MASK_FOLDER, mask_filename)
 
+        # Log du chemin du masque réel pour débogage
+        st.write(f"Chemin du masque réel : {mask_real_path}")
+
         # Vérifie si le masque réel existe dans le répertoire
         if os.path.exists(mask_real_path):
             mask_real = Image.open(mask_real_path)
