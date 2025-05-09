@@ -20,7 +20,8 @@ Cette application permet de :
 """)
 
 # ---------------- LISTE DES IMAGES ----------------
-image_paths = glob.glob(os.path.join(BASE_IMAGE_FOLDER, "*", "*_leftImg8bit.png"))
+# Utilisation de glob pour parcourir les sous-dossiers des différentes villes (directories)
+image_paths = glob.glob(os.path.join(BASE_IMAGE_FOLDER, "**", "*_leftImg8bit.png"), recursive=True)
 image_ids = [
     os.path.basename(p).replace("_leftImg8bit.png", "")
     for p in image_paths
@@ -42,6 +43,7 @@ else:
                 img_filename = selected_id + "_leftImg8bit.png"
                 mask_filename = selected_id + "_gtFine_color.png"
 
+                # Construction des chemins absolus
                 image_path = os.path.join(BASE_IMAGE_FOLDER, city, img_filename)
                 mask_gt_path = os.path.join(BASE_MASK_FOLDER, city, mask_filename)
 
