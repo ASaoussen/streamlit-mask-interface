@@ -33,8 +33,11 @@ if uploaded_file is not None:
         selected_id = img_filename.replace("_leftImg8bit.png", "")
         mask_filename = selected_id + "_gtFine_color.png"
 
+        # Extraire le nom de la ville (par ex. 'frankfurt')
+        city_name = selected_id.split("_")[0]
+
         # Définir le chemin vers le masque réel
-        mask_real_path = os.path.join(BASE_MASK_FOLDER, mask_filename)
+        mask_real_path = os.path.join(BASE_MASK_FOLDER, city_name, mask_filename)
 
         # Log du chemin du masque réel pour débogage
         st.write(f"Chemin du masque réel : {mask_real_path}")
