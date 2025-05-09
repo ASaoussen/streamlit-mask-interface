@@ -7,5 +7,5 @@ __pycache__/
 *.swp 
 .ipynb_checkpoints/ 
 .vscode/ 
-*.png
+
 model/
