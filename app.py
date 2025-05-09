@@ -4,6 +4,7 @@ from PIL import Image, UnidentifiedImageError
 import io
 import os
 
+
 # ---------------- CONFIG ----------------
 API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"  # URL de l'API sur Azure
 BASE_IMAGE_FOLDER = "./data/leftImg8bit/val"  # Chemin relatif vers le dossier des images
