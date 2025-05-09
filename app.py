@@ -7,8 +7,8 @@ import glob
 
 # ---------------- CONFIG ----------------
 API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"
-BASE_IMAGE_FOLDER = r"C:\Users\attia\data\leftImg8bit\val"
-BASE_MASK_FOLDER = r"C:\Users\attia\data\gtFine\val"
+BASE_IMAGE_FOLDER = "C:\\Users\\attia\\data\\leftImg8bit\\val"
+BASE_MASK_FOLDER =  "C:\\Users\\attia\\data\\gtFine\\val"
 
 # ---------------- INTERFACE ----------------
 st.title("Interface de test de segmentation")
