@@ -2,13 +2,9 @@ import streamlit as st
 import requests
 from PIL import Image, UnidentifiedImageError
 import io
-import os
-import glob
 
 # ---------------- CONFIG ----------------
-API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"
-BASE_IMAGE_FOLDER = "C:\\Users\\attia\\data\\leftImg8bit\\val"
-BASE_MASK_FOLDER =  "C:\\Users\\attia\\data\\gtFine\\val"
+API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"  # URL de l'API sur Azure
 
 # ---------------- INTERFACE ----------------
 st.title("Interface de test de segmentation")
@@ -19,64 +15,43 @@ Cette application permet de :
 - Afficher l’image réelle, le masque réel, et le masque prédit.
 """)
 
-# ---------------- LISTE DES IMAGES ----------------
-# Utilisation de glob pour parcourir les sous-dossiers des différentes villes (directories)
-image_paths = glob.glob(os.path.join(BASE_IMAGE_FOLDER, "**", "*_leftImg8bit.png"), recursive=True)
-image_ids = [
-    os.path.basename(p).replace("_leftImg8bit.png", "")
-    for p in image_paths
-]
+# ---------------- CHARGEMENT DE L'IMAGE ----------------
+uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"])
 
-if not image_ids:
-    st.warning("Aucune image trouvée dans le dossier.")
-else:
-    selected_id = st.selectbox("Choisis un ID d'image :", sorted(image_ids))
+# ---------------- CHARGEMENT DU MASQUE RÉEL ----------------
+# Tu pourrais ici choisir un chemin ou un mécanisme pour associer l'image téléchargée avec son masque réel
+mask_real_file = None
+if uploaded_file is not None:
+    try:
+        # Affiche l'image téléchargée
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, caption="Image originale", use_container_width=True)
 
-    if st.button("Lancer la prédiction") and selected_id:
+        # Remplace cette ligne par ton mécanisme pour récupérer le masque réel correspondant
+        # (par exemple, tu pourrais avoir un dossier de masques réels avec un nom d'image similaire)
+        mask_real_file = uploaded_file.name.replace(".jpg", "_mask.png")  # Exemple, tu peux personnaliser cette logique
         try:
-            # Vérifie la validité de l'ID sélectionné
-            parts = selected_id.split("_")
-            if len(parts) < 3:
-                st.error("Format d'ID invalide. Exemple attendu : frankfurt_000000_000294")
-            else:
-                city = parts[0]
-                img_filename = selected_id + "_leftImg8bit.png"
-                mask_filename = selected_id + "_gtFine_color.png"
+            mask_real = Image.open(mask_real_file)
+            st.image(mask_real, caption="Masque réel", use_container_width=True)
+        except FileNotFoundError:
+            st.warning("Le masque réel pour cette image n'a pas été trouvé.")
 
-                # Construction des chemins absolus
-                image_path = os.path.join(BASE_IMAGE_FOLDER, city, img_filename)
-                mask_gt_path = os.path.join(BASE_MASK_FOLDER, city, mask_filename)
+        # ---------------- ENVOI À L'API ----------------
+        with st.spinner("Prédiction en cours..."):
+            files = {"image": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+            response = requests.post(API_URL, files=files)
 
-                if not os.path.exists(image_path):
-                    st.error(f"Image non trouvée : {image_path}")
-                elif not os.path.exists(mask_gt_path):
-                    st.error(f"Masque ground truth non trouvé : {mask_gt_path}")
-                else:
-                    image = Image.open(image_path).convert("RGB")
-                    mask_gt = Image.open(mask_gt_path)
+        # Vérification de la réponse de l'API
+        if response.status_code == 200:
+            try:
+                # Essaye d'ouvrir le masque généré par l'API
+                pred_mask = Image.open(io.BytesIO(response.content))
+                st.success("Masque prédit reçu avec succès !")
+                st.image(pred_mask, caption="Masque prédit", use_container_width=True)
+            except UnidentifiedImageError:
+                st.error("Le fichier renvoyé par l'API n'est pas une image valide.")
+        else:
+            st.error(f"Erreur API ({response.status_code}) : {response.text}")
 
-                    # Affichage des images réelles
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.image(image, caption="Image réelle")
-                    with col2:
-                        st.image(mask_gt, caption="Masque réel")
-
-                    # Envoi de l'image à l'API
-                    with st.spinner("Prédiction en cours..."):
-                        with open(image_path, "rb") as f:
-                            files = {"image": (img_filename, f, "image/png")}
-                            response = requests.post(API_URL, files=files)
-
-                        if response.status_code == 200:
-                            try:
-                                pred_mask = Image.open(io.BytesIO(response.content))
-                                st.success("Masque prédit reçu avec succès !")
-                                st.image(pred_mask, caption="Masque prédit")
-                            except UnidentifiedImageError:
-                                st.error("Le fichier renvoyé par l'API n'est pas une image valide.")
-                        else:
-                            st.error(f"Erreur API ({response.status_code}) : {response.text}")
-
-        except Exception as e:
-            st.error(f"Erreur : {e}")
+    except Exception as e:
+        st.error(f"Erreur de traitement : {e}")
