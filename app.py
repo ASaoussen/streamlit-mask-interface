@@ -2,9 +2,12 @@ import streamlit as st
 import requests
 from PIL import Image, UnidentifiedImageError
 import io
+import os
 
 # ---------------- CONFIG ----------------
 API_URL = "https://segmentationimages.azurewebsites.net/predict_mask"  # URL de l'API sur Azure
+BASE_IMAGE_FOLDER = "./data/leftImg8bit/val"  # Chemin relatif vers le dossier des images
+BASE_MASK_FOLDER = "./data/gtFine/val"  # Chemin relatif vers le dossier des masques réels
 
 # ---------------- INTERFACE ----------------
 st.title("Interface de test de segmentation")
@@ -19,21 +22,25 @@ Cette application permet de :
 uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"])
 
 # ---------------- CHARGEMENT DU MASQUE RÉEL ----------------
-# Tu pourrais ici choisir un chemin ou un mécanisme pour associer l'image téléchargée avec son masque réel
-mask_real_file = None
 if uploaded_file is not None:
     try:
         # Affiche l'image téléchargée
         image = Image.open(uploaded_file).convert("RGB")
         st.image(image, caption="Image originale", use_container_width=True)
 
-        # Remplace cette ligne par ton mécanisme pour récupérer le masque réel correspondant
-        # (par exemple, tu pourrais avoir un dossier de masques réels avec un nom d'image similaire)
-        mask_real_file = uploaded_file.name.replace(".jpg", "_mask.png")  # Exemple, tu peux personnaliser cette logique
-        try:
-            mask_real = Image.open(mask_real_file)
+        # Utiliser l'ID de l'image pour trouver le masque réel dans le dossier correspondant
+        img_filename = uploaded_file.name
+        selected_id = img_filename.replace("_leftImg8bit.png", "")
+        mask_filename = selected_id + "_gtFine_color.png"
+
+        # Définir le chemin vers le masque réel
+        mask_real_path = os.path.join(BASE_MASK_FOLDER, mask_filename)
+
+        # Vérifie si le masque réel existe dans le répertoire
+        if os.path.exists(mask_real_path):
+            mask_real = Image.open(mask_real_path)
             st.image(mask_real, caption="Masque réel", use_container_width=True)
-        except FileNotFoundError:
+        else:
             st.warning("Le masque réel pour cette image n'a pas été trouvé.")
 
         # ---------------- ENVOI À L'API ----------------
