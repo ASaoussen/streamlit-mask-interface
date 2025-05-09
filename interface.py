@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import io
 import os
 import glob
@@ -22,7 +22,7 @@ Cette application permet de :
 # ---------------- LISTE DES IMAGES ----------------
 image_paths = glob.glob(os.path.join(BASE_IMAGE_FOLDER, "*", "*_leftImg8bit.png"))
 image_ids = [
-    os.path.splitext(os.path.basename(p))[0].replace("_leftImg8bit", "")
+    os.path.basename(p).replace("_leftImg8bit.png", "")
     for p in image_paths
 ]
 
@@ -33,45 +33,48 @@ else:
 
     if st.button("Lancer la prédiction") and selected_id:
         try:
-            # Reconstituer les chemins
-            parts = selected_id.split("_")  # frankfurt_000000_000294
-            city = parts[0]
-            img_filename = selected_id + "_leftImg8bit.png"
-            mask_filename = selected_id + "_gtFine_color.png"
-
-            image_path = os.path.join(BASE_IMAGE_FOLDER, city, img_filename)
-            mask_gt_path = os.path.join(BASE_MASK_FOLDER, city, mask_filename)
-
-            if not os.path.exists(image_path):
-                st.error(f"Image non trouvée : {image_path}")
-            elif not os.path.exists(mask_gt_path):
-                st.error(f"Masque ground truth non trouvé : {mask_gt_path}")
+            # Vérifie la validité de l'ID sélectionné
+            parts = selected_id.split("_")
+            if len(parts) < 3:
+                st.error("Format d'ID invalide. Exemple attendu : frankfurt_000000_000294")
             else:
-                image = Image.open(image_path).convert("RGB")
-                mask_gt = Image.open(mask_gt_path)
+                city = parts[0]
+                img_filename = selected_id + "_leftImg8bit.png"
+                mask_filename = selected_id + "_gtFine_color.png"
 
-                # Affichage
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.image(image, caption="Image réelle", use_container_width=True)
-                with col2:
-                    st.image(mask_gt, caption="Masque réel", use_container_width=True)
+                image_path = os.path.join(BASE_IMAGE_FOLDER, city, img_filename)
+                mask_gt_path = os.path.join(BASE_MASK_FOLDER, city, mask_filename)
 
-                # Envoi à l'API
-                with st.spinner("Prédiction en cours..."):
-                    with open(image_path, "rb") as f:
-                        files = {"image": (img_filename, f, "image/png")}
-                        response = requests.post(API_URL, files=files)
+                if not os.path.exists(image_path):
+                    st.error(f"Image non trouvée : {image_path}")
+                elif not os.path.exists(mask_gt_path):
+                    st.error(f"Masque ground truth non trouvé : {mask_gt_path}")
+                else:
+                    image = Image.open(image_path).convert("RGB")
+                    mask_gt = Image.open(mask_gt_path)
 
-                    if response.status_code == 200:
-                        try:
-                            pred_mask = Image.open(io.BytesIO(response.content))
-                            st.success("Masque prédit reçu avec succès !")
-                            st.image(pred_mask, caption="Masque prédit", use_container_width=True)
-                        except Exception as e:
-                            st.error(f"Erreur de traitement du masque prédit : {e}")
-                    else:
-                        st.error(f"Erreur API ({response.status_code}) : {response.text}")
+                    # Affichage des images réelles
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.image(image, caption="Image réelle", use_container_width=True)
+                    with col2:
+                        st.image(mask_gt, caption="Masque réel", use_container_width=True)
+
+                    # Envoi de l'image à l'API
+                    with st.spinner("Prédiction en cours..."):
+                        with open(image_path, "rb") as f:
+                            files = {"image": (img_filename, f, "image/png")}
+                            response = requests.post(API_URL, files=files)
+
+                        if response.status_code == 200:
+                            try:
+                                pred_mask = Image.open(io.BytesIO(response.content))
+                                st.success("Masque prédit reçu avec succès !")
+                                st.image(pred_mask, caption="Masque prédit", use_container_width=True)
+                            except UnidentifiedImageError:
+                                st.error("Le fichier renvoyé par l'API n'est pas une image valide.")
+                        else:
+                            st.error(f"Erreur API ({response.status_code}) : {response.text}")
 
         except Exception as e:
             st.error(f"Erreur : {e}")
